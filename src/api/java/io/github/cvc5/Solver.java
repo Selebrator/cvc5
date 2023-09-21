@@ -33,6 +33,8 @@ public class Solver implements IPointer
 
   private long pointer;
 
+  private List<AbstractPointer> childPointers = new ArrayList<>();
+
   public long getPointer()
   {
     return pointer;
@@ -50,6 +52,23 @@ public class Solver implements IPointer
   }
 
   private static native void deletePointer(long pointer);
+
+  private <T extends AbstractPointer> T registerPointer(T pointer) {
+	this.childPointers.add(pointer);
+	return pointer;
+  }
+
+  /**
+   * Calls deletePointer on this solver
+   * and on all objects created through methods call on on this solver.
+   */
+  public void deleteAllPointers() {
+	for (AbstractPointer pointer : this.childPointers) {
+	  pointer.deletePointer();
+	}
+	this.childPointers.clear();
+	this.deletePointer();
+  }
 
   // store IOracle objects
   List<IOracle> oracles = new ArrayList<>();
@@ -73,7 +92,7 @@ public class Solver implements IPointer
   public Sort getBooleanSort()
   {
     long sortPointer = getBooleanSort(pointer);
-    return new Sort(sortPointer);
+    return registerPointer(new Sort(sortPointer));
   }
 
   private native long getBooleanSort(long pointer);
@@ -84,7 +103,7 @@ public class Solver implements IPointer
   public Sort getIntegerSort()
   {
     long sortPointer = getIntegerSort(pointer);
-    return new Sort(sortPointer);
+    return registerPointer(new Sort(sortPointer));
   }
 
   public native long getIntegerSort(long pointer);
@@ -94,7 +113,7 @@ public class Solver implements IPointer
   public Sort getRealSort()
   {
     long sortPointer = getRealSort(pointer);
-    return new Sort(sortPointer);
+    return registerPointer(new Sort(sortPointer));
   }
 
   private native long getRealSort(long pointer);
@@ -104,7 +123,7 @@ public class Solver implements IPointer
   public Sort getRegExpSort()
   {
     long sortPointer = getRegExpSort(pointer);
-    return new Sort(sortPointer);
+    return registerPointer(new Sort(sortPointer));
   }
 
   private native long getRegExpSort(long pointer);
@@ -115,7 +134,7 @@ public class Solver implements IPointer
   public Sort getRoundingModeSort() throws CVC5ApiException
   {
     long sortPointer = getRoundingModeSort(pointer);
-    return new Sort(sortPointer);
+    return registerPointer(new Sort(sortPointer));
   }
 
   private native long getRoundingModeSort(long pointer) throws CVC5ApiException;
@@ -125,7 +144,7 @@ public class Solver implements IPointer
   public Sort getStringSort()
   {
     long sortPointer = getStringSort(pointer);
-    return new Sort(sortPointer);
+    return registerPointer(new Sort(sortPointer));
   }
 
   private native long getStringSort(long solverPointer);
@@ -138,7 +157,7 @@ public class Solver implements IPointer
   public Sort mkArraySort(Sort indexSort, Sort elemSort)
   {
     long sortPointer = mkArraySort(pointer, indexSort.getPointer(), elemSort.getPointer());
-    return new Sort(sortPointer);
+    return registerPointer(new Sort(sortPointer));
   }
 
   private native long mkArraySort(long pointer, long indexSortPointer, long elementSortPointer);
@@ -153,7 +172,7 @@ public class Solver implements IPointer
   {
     Utils.validateUnsigned(size, "size");
     long sortPointer = mkBitVectorSort(pointer, size);
-    return new Sort(sortPointer);
+    return registerPointer(new Sort(sortPointer));
   }
 
   private native long mkBitVectorSort(long pointer, int size);
@@ -167,7 +186,7 @@ public class Solver implements IPointer
   public Sort mkFiniteFieldSort(String size) throws CVC5ApiException
   {
     long sortPointer = mkFiniteFieldSort(pointer, size);
-    return new Sort(sortPointer);
+    return registerPointer(new Sort(sortPointer));
   }
 
   private native long mkFiniteFieldSort(long pointer, String size);
@@ -183,7 +202,7 @@ public class Solver implements IPointer
     Utils.validateUnsigned(exp, "exp");
     Utils.validateUnsigned(sig, "sig");
     long sortPointer = mkFloatingPointSort(pointer, exp, sig);
-    return new Sort(sortPointer);
+    return registerPointer(new Sort(sortPointer));
   }
 
   private native long mkFloatingPointSort(long solverPointer, int exp, int sig);
@@ -197,7 +216,7 @@ public class Solver implements IPointer
   public Sort mkDatatypeSort(DatatypeDecl dtypedecl) throws CVC5ApiException
   {
     long pointer = mkDatatypeSort(this.pointer, dtypedecl.getPointer());
-    return new Sort(pointer);
+    return registerPointer(new Sort(pointer));
   }
 
   private native long mkDatatypeSort(long pointer, long datatypeDeclPointer)
@@ -242,7 +261,7 @@ public class Solver implements IPointer
   public Sort mkFunctionSort(Sort[] sorts, Sort codomain)
   {
     long sortPointer = mkFunctionSort(pointer, Utils.getPointers(sorts), codomain.getPointer());
-    return new Sort(sortPointer);
+    return registerPointer(new Sort(sortPointer));
   }
 
   private native long mkFunctionSort(long pointer, long[] sortPointers, long codomainPointer);
@@ -258,7 +277,7 @@ public class Solver implements IPointer
   public Sort mkParamSort(String symbol)
   {
     long sortPointer = mkParamSort(pointer, symbol);
-    return new Sort(sortPointer);
+    return registerPointer(new Sort(sortPointer));
   }
 
   private native long mkParamSort(long pointer, String symbol);
@@ -273,7 +292,7 @@ public class Solver implements IPointer
   public Sort mkParamSort()
   {
     long sortPointer = mkParamSort(pointer);
-    return new Sort(sortPointer);
+    return registerPointer(new Sort(sortPointer));
   }
 
   private native long mkParamSort(long pointer);
@@ -286,7 +305,7 @@ public class Solver implements IPointer
   public Sort mkPredicateSort(Sort[] sorts)
   {
     long sortPointer = mkPredicateSort(pointer, Utils.getPointers(sorts));
-    return new Sort(sortPointer);
+    return registerPointer(new Sort(sortPointer));
   }
 
   private native long mkPredicateSort(long pointer, long[] sortPointers);
@@ -302,7 +321,7 @@ public class Solver implements IPointer
   public Sort mkRecordSort(Pair<String, Sort>[] fields)
   {
     long sortPointer = mkRecordSort(pointer, Utils.getPairs(fields));
-    return new Sort(sortPointer);
+    return registerPointer(new Sort(sortPointer));
   }
 
   private native long mkRecordSort(long pointer, Pair<String, Long>[] fields);
@@ -315,7 +334,7 @@ public class Solver implements IPointer
   public Sort mkSetSort(Sort elemSort)
   {
     long sortPointer = mkSetSort(pointer, elemSort.getPointer());
-    return new Sort(sortPointer);
+    return registerPointer(new Sort(sortPointer));
   }
 
   private native long mkSetSort(long pointer, long elemSortPointer);
@@ -327,7 +346,7 @@ public class Solver implements IPointer
   public Sort mkBagSort(Sort elemSort)
   {
     long sortPointer = mkBagSort(pointer, elemSort.getPointer());
-    return new Sort(sortPointer);
+    return registerPointer(new Sort(sortPointer));
   }
 
   private native long mkBagSort(long pointer, long elemSortPointer);
@@ -340,7 +359,7 @@ public class Solver implements IPointer
   public Sort mkSequenceSort(Sort elemSort)
   {
     long sortPointer = mkSequenceSort(pointer, elemSort.getPointer());
-    return new Sort(sortPointer);
+    return registerPointer(new Sort(sortPointer));
   }
 
   private native long mkSequenceSort(long pointer, long elemSortPointer);
@@ -371,7 +390,7 @@ public class Solver implements IPointer
   public Sort mkAbstractSort(SortKind kind)
   {
     long sortPointer = mkAbstractSort(pointer, kind.getValue());
-    return new Sort(sortPointer);
+    return registerPointer(new Sort(sortPointer));
   }
 
   private native long mkAbstractSort(long pointer, int kindValue);
@@ -384,7 +403,7 @@ public class Solver implements IPointer
   public Sort mkUninterpretedSort(String symbol)
   {
     long sortPointer = mkUninterpretedSort(pointer, symbol);
-    return new Sort(sortPointer);
+    return registerPointer(new Sort(sortPointer));
   }
 
   private native long mkUninterpretedSort(long pointer, String symbol);
@@ -396,7 +415,7 @@ public class Solver implements IPointer
   public Sort mkUninterpretedSort()
   {
     long sortPointer = mkUninterpretedSort(pointer);
-    return new Sort(sortPointer);
+    return registerPointer(new Sort(sortPointer));
   }
 
   private native long mkUninterpretedSort(long pointer);
@@ -416,7 +435,7 @@ public class Solver implements IPointer
   {
     Utils.validateUnsigned(arity, "arity");
     long sortPointer = mkUnresolvedDatatypeSort(pointer, symbol, arity);
-    return new Sort(sortPointer);
+    return registerPointer(new Sort(sortPointer));
   }
 
   private native long mkUnresolvedDatatypeSort(long pointer, String symbol, int arity);
@@ -451,7 +470,7 @@ public class Solver implements IPointer
   {
     Utils.validateUnsigned(arity, "arity");
     long sortPointer = mkUninterpretedSortConstructorSort(pointer, arity, symbol);
-    return new Sort(sortPointer);
+    return registerPointer(new Sort(sortPointer));
   }
 
   private native long mkUninterpretedSortConstructorSort(long pointer, int arity, String symbol);
@@ -470,7 +489,7 @@ public class Solver implements IPointer
   {
     Utils.validateUnsigned(arity, "arity");
     long sortPointer = mkUninterpretedSortConstructorSort(pointer, arity);
-    return new Sort(sortPointer);
+    return registerPointer(new Sort(sortPointer));
   }
 
   private native long mkUninterpretedSortConstructorSort(long pointer, int arity);
@@ -484,7 +503,7 @@ public class Solver implements IPointer
   {
     long[] sortPointers = Utils.getPointers(sorts);
     long sortPointer = mkTupleSort(pointer, sortPointers);
-    return new Sort(sortPointer);
+    return registerPointer(new Sort(sortPointer));
   }
 
   private native long mkTupleSort(long pointer, long[] sortPointers);
@@ -501,7 +520,7 @@ public class Solver implements IPointer
   public Term mkTerm(Kind kind)
   {
     long termPointer = mkTerm(pointer, kind.getValue());
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkTerm(long pointer, int kindValue);
@@ -515,7 +534,7 @@ public class Solver implements IPointer
   public Term mkTerm(Kind kind, Term child)
   {
     long termPointer = mkTerm(pointer, kind.getValue(), child.getPointer());
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkTerm(long pointer, int kindValue, long childPointer);
@@ -530,7 +549,7 @@ public class Solver implements IPointer
   public Term mkTerm(Kind kind, Term child1, Term child2)
   {
     long termPointer = mkTerm(pointer, kind.getValue(), child1.getPointer(), child2.getPointer());
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkTerm(long pointer, int kindValue, long child1Pointer, long child2Pointer);
@@ -547,7 +566,7 @@ public class Solver implements IPointer
   {
     long termPointer = mkTerm(
         pointer, kind.getValue(), child1.getPointer(), child2.getPointer(), child3.getPointer());
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkTerm(
@@ -562,7 +581,7 @@ public class Solver implements IPointer
   {
     long[] childPointers = Utils.getPointers(children);
     long termPointer = mkTerm(pointer, kind.getValue(), childPointers);
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkTerm(long pointer, int kindValue, long[] childrenPointers);
@@ -576,7 +595,7 @@ public class Solver implements IPointer
   public Term mkTerm(Op op)
   {
     long termPointer = mkTerm(pointer, op.getPointer());
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkTerm(long pointer, long opPointer);
@@ -590,7 +609,7 @@ public class Solver implements IPointer
   public Term mkTerm(Op op, Term child)
   {
     long termPointer = mkTerm(pointer, op.getPointer(), child.getPointer());
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkTerm(long pointer, long opPointer, long childPointer);
@@ -606,7 +625,7 @@ public class Solver implements IPointer
   public Term mkTerm(Op op, Term child1, Term child2)
   {
     long termPointer = mkTerm(pointer, op.getPointer(), child1.getPointer(), child2.getPointer());
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkTerm(long pointer, long opPointer, long child1Pointer, long child2Pointer);
@@ -623,7 +642,7 @@ public class Solver implements IPointer
   {
     long termPointer =
         mkTerm(op.getPointer(), child1.getPointer(), child2.getPointer(), child3.getPointer());
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkTerm(
@@ -640,7 +659,7 @@ public class Solver implements IPointer
   {
     long[] childPointers = Utils.getPointers(children);
     long termPointer = mkTerm(pointer, op.getPointer(), childPointers);
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkTerm(long pointer, long opPointer, long[] childrenPointers);
@@ -655,7 +674,7 @@ public class Solver implements IPointer
   {
     long[] termPointers = Utils.getPointers(terms);
     long termPointer = mkTuple(pointer, termPointers);
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkTuple(long pointer, long[] termPointers);
@@ -677,7 +696,7 @@ public class Solver implements IPointer
   public Op mkOp(Kind kind)
   {
     long opPointer = mkOp(pointer, kind.getValue());
-    return new Op(opPointer);
+    return registerPointer(new Op(opPointer));
   }
 
   private native long mkOp(long pointer, int kindValue);
@@ -695,7 +714,7 @@ public class Solver implements IPointer
   public Op mkOp(Kind kind, String arg)
   {
     long opPointer = mkOp(pointer, kind.getValue(), arg);
-    return new Op(opPointer);
+    return registerPointer(new Op(opPointer));
   }
 
   private native long mkOp(long pointer, int kindValue, String arg);
@@ -725,7 +744,7 @@ public class Solver implements IPointer
   {
     Utils.validateUnsigned(arg, "arg");
     long opPointer = mkOp(pointer, kind.getValue(), arg);
-    return new Op(opPointer);
+    return registerPointer(new Op(opPointer));
   }
 
   private native long mkOp(long pointer, int kindValue, int arg);
@@ -751,7 +770,7 @@ public class Solver implements IPointer
     Utils.validateUnsigned(arg1, "arg1");
     Utils.validateUnsigned(arg2, "arg2");
     long opPointer = mkOp(pointer, kind.getValue(), arg1, arg2);
-    return new Op(opPointer);
+    return registerPointer(new Op(opPointer));
   }
 
   private native long mkOp(long pointer, int kindValue, int arg1, int arg2);
@@ -770,7 +789,7 @@ public class Solver implements IPointer
   {
     Utils.validateUnsigned(args, "args");
     long opPointer = mkOp(pointer, kind.getValue(), args);
-    return new Op(opPointer);
+    return registerPointer(new Op(opPointer));
   }
 
   private native long mkOp(long pointer, int kindValue, int[] args);
@@ -786,7 +805,7 @@ public class Solver implements IPointer
   public Term mkTrue()
   {
     long termPointer = mkTrue(pointer);
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkTrue(long pointer);
@@ -797,7 +816,7 @@ public class Solver implements IPointer
   public Term mkFalse()
   {
     long termPointer = mkFalse(pointer);
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkFalse(long pointer);
@@ -809,7 +828,7 @@ public class Solver implements IPointer
   public Term mkBoolean(boolean val)
   {
     long termPointer = mkBoolean(pointer, val);
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkBoolean(long pointer, boolean val);
@@ -820,7 +839,7 @@ public class Solver implements IPointer
   public Term mkPi()
   {
     long termPointer = mkPi(pointer);
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkPi(long pointer);
@@ -835,7 +854,7 @@ public class Solver implements IPointer
   public Term mkInteger(String s) throws CVC5ApiException
   {
     long termPointer = mkInteger(pointer, s);
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkInteger(long pointer, String s) throws CVC5ApiException;
@@ -848,7 +867,7 @@ public class Solver implements IPointer
   public Term mkInteger(long val)
   {
     long termPointer = mkInteger(pointer, val);
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkInteger(long pointer, long val);
@@ -863,7 +882,7 @@ public class Solver implements IPointer
   public Term mkReal(String s) throws CVC5ApiException
   {
     long termPointer = mkReal(pointer, s);
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkReal(long pointer, String s) throws CVC5ApiException;
@@ -875,7 +894,7 @@ public class Solver implements IPointer
   public Term mkReal(long val)
   {
     long termPointer = mkRealValue(pointer, val);
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkRealValue(long pointer, long val);
@@ -888,7 +907,7 @@ public class Solver implements IPointer
   public Term mkReal(long num, long den)
   {
     long termPointer = mkReal(pointer, num, den);
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkReal(long pointer, long num, long den);
@@ -900,7 +919,7 @@ public class Solver implements IPointer
   public Term mkRegexpNone()
   {
     long termPointer = mkRegexpNone(pointer);
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkRegexpNone(long pointer);
@@ -912,7 +931,7 @@ public class Solver implements IPointer
   public Term mkRegexpAll()
   {
     long termPointer = mkRegexpAll(pointer);
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkRegexpAll(long pointer);
@@ -924,7 +943,7 @@ public class Solver implements IPointer
   public Term mkRegexpAllchar()
   {
     long termPointer = mkRegexpAllchar(pointer);
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkRegexpAllchar(long pointer);
@@ -937,7 +956,7 @@ public class Solver implements IPointer
   public Term mkEmptySet(Sort sort)
   {
     long termPointer = mkEmptySet(pointer, sort.getPointer());
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkEmptySet(long pointer, long sortPointer);
@@ -949,7 +968,7 @@ public class Solver implements IPointer
   public Term mkEmptyBag(Sort sort)
   {
     long termPointer = mkEmptyBag(pointer, sort.getPointer());
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkEmptyBag(long pointer, long sortPointer);
@@ -964,7 +983,7 @@ public class Solver implements IPointer
   public Term mkSepEmp()
   {
     long termPointer = mkSepEmp(pointer);
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkSepEmp(long pointer);
@@ -980,7 +999,7 @@ public class Solver implements IPointer
   public Term mkSepNil(Sort sort)
   {
     long termPointer = mkSepNil(pointer, sort.getPointer());
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkSepNil(long pointer, long sortPointer);
@@ -1007,7 +1026,7 @@ public class Solver implements IPointer
   {
     // TODO: review unicode
     long termPointer = mkString(pointer, s, useEscSequences);
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkString(long pointer, String s, boolean useEscSequences);
@@ -1023,7 +1042,7 @@ public class Solver implements IPointer
   {
     Utils.validateUnsigned(s, "s");
     long termPointer = mkString(pointer, s);
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkString(long pointer, int[] s);
@@ -1036,7 +1055,7 @@ public class Solver implements IPointer
   public Term mkEmptySequence(Sort sort)
   {
     long termPointer = mkEmptySequence(pointer, sort.getPointer());
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkEmptySequence(long pointer, long sortPointer);
@@ -1049,7 +1068,7 @@ public class Solver implements IPointer
   public Term mkUniverseSet(Sort sort)
   {
     long termPointer = mkUniverseSet(pointer, sort.getPointer());
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkUniverseSet(long pointer, long sortPointer);
@@ -1079,7 +1098,7 @@ public class Solver implements IPointer
     Utils.validateUnsigned(size, "size");
     Utils.validateUnsigned(val, "val");
     long termPointer = mkBitVector(pointer, size, val);
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkBitVector(long pointer, int size, long val);
@@ -1101,7 +1120,7 @@ public class Solver implements IPointer
     Utils.validateUnsigned(size, "size");
     Utils.validateUnsigned(base, "base");
     long termPointer = mkBitVector(pointer, size, s, base);
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkBitVector(long pointer, int size, String s, int base);
@@ -1119,7 +1138,7 @@ public class Solver implements IPointer
   public Term mkFiniteFieldElem(String val, Sort sort) throws CVC5ApiException
   {
     long termPointer = mkFiniteFieldElem(pointer, val, sort.getPointer());
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkFiniteFieldElem(long pointer, String val, long sortPointer);
@@ -1135,7 +1154,7 @@ public class Solver implements IPointer
   public Term mkConstArray(Sort sort, Term val)
   {
     long termPointer = mkConstArray(pointer, sort.getPointer(), val.getPointer());
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkConstArray(long pointer, long sortPointer, long valPointer);
@@ -1151,7 +1170,7 @@ public class Solver implements IPointer
     Utils.validateUnsigned(exp, "exp");
     Utils.validateUnsigned(sig, "sig");
     long termPointer = mkFloatingPointPosInf(pointer, exp, sig);
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkFloatingPointPosInf(long pointer, int exp, int sig);
@@ -1167,7 +1186,7 @@ public class Solver implements IPointer
     Utils.validateUnsigned(exp, "exp");
     Utils.validateUnsigned(sig, "sig");
     long termPointer = mkFloatingPointNegInf(pointer, exp, sig);
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkFloatingPointNegInf(long pointer, int exp, int sig);
@@ -1183,7 +1202,7 @@ public class Solver implements IPointer
     Utils.validateUnsigned(exp, "exp");
     Utils.validateUnsigned(sig, "sig");
     long termPointer = mkFloatingPointNaN(pointer, exp, sig);
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkFloatingPointNaN(long pointer, int exp, int sig);
@@ -1200,7 +1219,7 @@ public class Solver implements IPointer
     Utils.validateUnsigned(exp, "exp");
     Utils.validateUnsigned(sig, "sig");
     long termPointer = mkFloatingPointPosZero(pointer, exp, sig);
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkFloatingPointPosZero(long pointer, int exp, int sig);
@@ -1217,7 +1236,7 @@ public class Solver implements IPointer
     Utils.validateUnsigned(exp, "exp");
     Utils.validateUnsigned(sig, "sig");
     long termPointer = mkFloatingPointNegZero(pointer, exp, sig);
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkFloatingPointNegZero(long pointer, int exp, int sig);
@@ -1229,7 +1248,7 @@ public class Solver implements IPointer
   public Term mkRoundingMode(RoundingMode rm)
   {
     long termPointer = mkRoundingMode(pointer, rm.getValue());
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkRoundingMode(long pointer, int rm);
@@ -1248,7 +1267,7 @@ public class Solver implements IPointer
     Utils.validateUnsigned(exp, "exp");
     Utils.validateUnsigned(sig, "sig");
     long termPointer = mkFloatingPoint(pointer, exp, sig, val.getPointer());
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkFloatingPoint(long pointer, int exp, int sig, long valPointer);
@@ -1266,7 +1285,7 @@ public class Solver implements IPointer
   {
     long termPointer =
         mkFloatingPointX(pointer, sign.getPointer(), exp.getPointer(), sig.getPointer());
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkFloatingPointX(
@@ -1286,7 +1305,7 @@ public class Solver implements IPointer
   {
     Utils.validateUnsigned(upperBound, "upperBound");
     long termPointer = mkCardinalityConstraint(pointer, sort.getPointer(), upperBound);
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkCardinalityConstraint(long pointer, long sortPointer, int upperBound);
@@ -1311,7 +1330,7 @@ public class Solver implements IPointer
   public Term mkConst(Sort sort, String symbol)
   {
     long termPointer = mkConst(pointer, sort.getPointer(), symbol);
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkConst(long pointer, long sortPointer, String symbol);
@@ -1325,7 +1344,7 @@ public class Solver implements IPointer
   public Term mkConst(Sort sort)
   {
     long termPointer = mkConst(pointer, sort.getPointer());
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkConst(long pointer, long sortPointer);
@@ -1351,7 +1370,7 @@ public class Solver implements IPointer
   public Term mkVar(Sort sort, String symbol)
   {
     long termPointer = mkVar(pointer, sort.getPointer(), symbol);
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long mkVar(long pointer, long sortPointer, String symbol);
@@ -1368,7 +1387,7 @@ public class Solver implements IPointer
   public DatatypeConstructorDecl mkDatatypeConstructorDecl(String name)
   {
     long declPointer = mkDatatypeConstructorDecl(pointer, name);
-    return new DatatypeConstructorDecl(declPointer);
+    return registerPointer(new DatatypeConstructorDecl(declPointer));
   }
 
   private native long mkDatatypeConstructorDecl(long pointer, String name);
@@ -1396,7 +1415,7 @@ public class Solver implements IPointer
   public DatatypeDecl mkDatatypeDecl(String name, boolean isCoDatatype)
   {
     long declPointer = mkDatatypeDecl(pointer, name, isCoDatatype);
-    return new DatatypeDecl(declPointer);
+    return registerPointer(new DatatypeDecl(declPointer));
   }
 
   private native long mkDatatypeDecl(long pointer, String name, boolean isCoDatatype);
@@ -1431,7 +1450,7 @@ public class Solver implements IPointer
   {
     long[] paramPointers = Utils.getPointers(params);
     long declPointer = mkDatatypeDecl(pointer, name, paramPointers, isCoDatatype);
-    return new DatatypeDecl(declPointer);
+    return registerPointer(new DatatypeDecl(declPointer));
   }
 
   private native long mkDatatypeDecl(
@@ -1456,7 +1475,7 @@ public class Solver implements IPointer
   public Term simplify(Term t)
   {
     long termPointer = simplify(pointer, t.getPointer());
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long simplify(long pointer, long termPointer);
@@ -1489,7 +1508,7 @@ public class Solver implements IPointer
   public Result checkSat()
   {
     long resultPointer = checkSat(pointer);
-    return new Result(resultPointer);
+    return registerPointer(new Result(resultPointer));
   }
 
   private native long checkSat(long pointer);
@@ -1507,7 +1526,7 @@ public class Solver implements IPointer
   public Result checkSatAssuming(Term assumption)
   {
     long resultPointer = checkSatAssuming(pointer, assumption.getPointer());
-    return new Result(resultPointer);
+    return registerPointer(new Result(resultPointer));
   }
 
   private native long checkSatAssuming(long pointer, long assumptionPointer);
@@ -1527,7 +1546,7 @@ public class Solver implements IPointer
   {
     long[] pointers = Utils.getPointers(assumptions);
     long resultPointer = checkSatAssuming(pointer, pointers);
-    return new Result(resultPointer);
+    return registerPointer(new Result(resultPointer));
   }
 
   private native long checkSatAssuming(long pointer, long[] assumptionPointers);
@@ -1548,7 +1567,7 @@ public class Solver implements IPointer
   {
     long[] pointers = Utils.getPointers(ctors);
     long sortPointer = declareDatatype(pointer, symbol, pointers);
-    return new Sort(sortPointer);
+    return registerPointer(new Sort(sortPointer));
   }
 
   private native long declareDatatype(long pointer, String symbol, long[] declPointers);
@@ -1570,7 +1589,7 @@ public class Solver implements IPointer
   {
     long[] sortPointers = Utils.getPointers(sorts);
     long termPointer = declareFun(pointer, symbol, sortPointers, sort.getPointer());
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long declareFun(
@@ -1596,7 +1615,7 @@ public class Solver implements IPointer
   {
     Utils.validateUnsigned(arity, "arity");
     long sortPointer = declareSort(pointer, symbol, arity);
-    return new Sort(sortPointer);
+    return registerPointer(new Sort(sortPointer));
   }
 
   private native long declareSort(long pointer, String symbol, int arity);
@@ -1641,7 +1660,7 @@ public class Solver implements IPointer
     long[] boundVarPointers = Utils.getPointers(boundVars);
     long termPointer =
         defineFun(pointer, symbol, boundVarPointers, sort.getPointer(), term.getPointer(), global);
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long defineFun(long pointer,
@@ -1691,7 +1710,7 @@ public class Solver implements IPointer
     long[] boundVarPointers = Utils.getPointers(boundVars);
     long termPointer = defineFunRec(
         pointer, symbol, boundVarPointers, sort.getPointer(), term.getPointer(), global);
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long defineFunRec(long pointer,
@@ -1744,7 +1763,7 @@ public class Solver implements IPointer
     long[] boundVarPointers = Utils.getPointers(boundVars);
     long termPointer =
         defineFunRec(pointer, fun.getPointer(), boundVarPointers, term.getPointer(), global);
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long defineFunRec(
@@ -1913,7 +1932,7 @@ public class Solver implements IPointer
   public OptionInfo getOptionInfo(String option)
   {
     long optionPointer = getOptionInfo(pointer, option);
-    return new OptionInfo(optionPointer);
+    return registerPointer(new OptionInfo(optionPointer));
   }
 
   private native long getOptionInfo(long pointer, String option);
@@ -1978,8 +1997,8 @@ public class Solver implements IPointer
     Map<Term, Term> ret = new HashMap<>();
     for (Map.Entry<Long, Long> entry : map.entrySet())
     {
-      Term key = new Term(entry.getKey());
-      Term value = new Term(entry.getValue());
+      Term key = registerPointer(new Term(entry.getKey()));
+      Term value = registerPointer(new Term(entry.getValue()));
       ret.put(key, value);
     }
     return ret;
@@ -2015,7 +2034,7 @@ public class Solver implements IPointer
   public Pair<Result, Term[]> getTimeoutCore()
   {
     Pair<Long, long[]> pair = getTimeoutCore(pointer);
-    Result result = new Result(pair.first);
+    Result result = registerPointer(new Result(pair.first));
     Term[] terms = Utils.getTerms(pair.second);
     Pair<Result, Term[]> ret = new Pair<>(result, terms);
     return ret;
@@ -2082,7 +2101,7 @@ public class Solver implements IPointer
   public Term getValue(Term term)
   {
     long termPointer = getValue(pointer, term.getPointer());
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long getValue(long pointer, long termPointer);
@@ -2196,7 +2215,7 @@ public class Solver implements IPointer
   public Term getQuantifierElimination(Term q)
   {
     long termPointer = getQuantifierElimination(pointer, q.getPointer());
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long getQuantifierElimination(long pointer, long qPointer);
@@ -2240,7 +2259,7 @@ public class Solver implements IPointer
   public Term getQuantifierEliminationDisjunct(Term q)
   {
     long termPointer = getQuantifierEliminationDisjunct(pointer, q.getPointer());
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long getQuantifierEliminationDisjunct(long pointer, long qPointer);
@@ -2272,7 +2291,7 @@ public class Solver implements IPointer
   public Term getValueSepHeap()
   {
     long termPointer = getValueSepHeap(pointer);
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long getValueSepHeap(long pointer);
@@ -2287,7 +2306,7 @@ public class Solver implements IPointer
   public Term getValueSepNil()
   {
     long termPointer = getValueSepNil(pointer);
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long getValueSepNil(long pointer);
@@ -2310,7 +2329,7 @@ public class Solver implements IPointer
   {
     long[] termPointers = Utils.getPointers(initValue);
     long termPointer = declarePool(pointer, symbol, sort.getPointer(), termPointers);
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long declarePool(
@@ -2346,7 +2365,7 @@ public class Solver implements IPointer
     oracles.add(oracle);
     long[] sortPointers = Utils.getPointers(sorts);
     long termPointer = declareOracleFun(pointer, symbol, sortPointers, sort.getPointer(), oracle);
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long declareOracleFun(
@@ -2408,7 +2427,7 @@ public class Solver implements IPointer
   public Term getInterpolant(Term conj)
   {
     long interpolPtr = getInterpolant(pointer, conj.getPointer());
-    return new Term(interpolPtr);
+    return registerPointer(new Term(interpolPtr));
   }
 
   private native long getInterpolant(long pointer, long conjPointer);
@@ -2436,7 +2455,7 @@ public class Solver implements IPointer
   public Term getInterpolant(Term conj, Grammar grammar)
   {
     long interpolPtr = getInterpolant(pointer, conj.getPointer(), grammar.getPointer());
-    return new Term(interpolPtr);
+    return registerPointer(new Term(interpolPtr));
   }
 
   private native long getInterpolant(long pointer, long conjPointer, long grammarPointer);
@@ -2468,7 +2487,7 @@ public class Solver implements IPointer
   public Term getInterpolantNext()
   {
     long interpolPtr = getInterpolantNext(pointer);
-    return new Term(interpolPtr);
+    return registerPointer(new Term(interpolPtr));
   }
 
   private native long getInterpolantNext(long pointer);
@@ -2493,7 +2512,7 @@ public class Solver implements IPointer
   public Term getAbduct(Term conj)
   {
     long abdPtr = getAbduct(pointer, conj.getPointer());
-    return new Term(abdPtr);
+    return registerPointer(new Term(abdPtr));
   }
 
   private native long getAbduct(long pointer, long conjPointer);
@@ -2519,7 +2538,7 @@ public class Solver implements IPointer
   public Term getAbduct(Term conj, Grammar grammar)
   {
     long abdPtr = getAbduct(pointer, conj.getPointer(), grammar.getPointer());
-    return new Term(abdPtr);
+    return registerPointer(new Term(abdPtr));
   }
 
   private native long getAbduct(long pointer, long conjPointer, long grammarPointer);
@@ -2544,7 +2563,7 @@ public class Solver implements IPointer
   public Term getAbductNext()
   {
     long abdPtr = getAbductNext(pointer);
-    return new Term(abdPtr);
+    return registerPointer(new Term(abdPtr));
   }
 
   private native long getAbductNext(long pointer);
@@ -2726,7 +2745,7 @@ public class Solver implements IPointer
   public Term declareSygusVar(String symbol, Sort sort)
   {
     long termPointer = declareSygusVar(pointer, symbol, sort.getPointer());
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long declareSygusVar(long pointer, String symbol, long sortPointer);
@@ -2746,7 +2765,7 @@ public class Solver implements IPointer
     long[] boundVarPointers = Utils.getPointers(boundVars);
     long[] ntSymbolPointers = Utils.getPointers(ntSymbols);
     long grammarPointer = mkGrammar(pointer, boundVarPointers, ntSymbolPointers);
-    return new Grammar(grammarPointer);
+    return registerPointer(new Grammar(grammarPointer));
   }
 
   private native long mkGrammar(long pointer, long[] boundVarPointers, long[] ntSymbolPointers);
@@ -2768,7 +2787,7 @@ public class Solver implements IPointer
   {
     long[] boundVarPointers = Utils.getPointers(boundVars);
     long termPointer = synthFun(pointer, symbol, boundVarPointers, sort.getPointer());
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long synthFun(
@@ -2793,7 +2812,7 @@ public class Solver implements IPointer
     long[] boundVarPointers = Utils.getPointers(boundVars);
     long termPointer =
         synthFun(pointer, symbol, boundVarPointers, sort.getPointer(), grammar.getPointer());
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long synthFun(
@@ -2900,7 +2919,7 @@ public class Solver implements IPointer
   public SynthResult checkSynth()
   {
     long resultPointer = checkSynth(pointer);
-    return new SynthResult(resultPointer);
+    return registerPointer(new SynthResult(resultPointer));
   }
 
   private native long checkSynth(long pointer);
@@ -2926,7 +2945,7 @@ public class Solver implements IPointer
   public SynthResult checkSynthNext()
   {
     long resultPointer = checkSynthNext(pointer);
-    return new SynthResult(resultPointer);
+    return registerPointer(new SynthResult(resultPointer));
   }
 
   private native long checkSynthNext(long pointer);
@@ -2943,7 +2962,7 @@ public class Solver implements IPointer
   public Term getSynthSolution(Term term)
   {
     long termPointer = getSynthSolution(pointer, term.getPointer());
-    return new Term(termPointer);
+    return registerPointer(new Term(termPointer));
   }
 
   private native long getSynthSolution(long pointer, long termPointer);
@@ -2974,7 +2993,7 @@ public class Solver implements IPointer
   public Statistics getStatistics()
   {
     long statisticsPointer = getStatistics(pointer);
-    return new Statistics(statisticsPointer);
+    return registerPointer(new Statistics(statisticsPointer));
   }
 
   private native long getStatistics(long pointer);
